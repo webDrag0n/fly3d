@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
+
+    public float total_memory = 100f;
+    public float memory_left=100f;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,4 +29,10 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadSceneAsync(scene_name, LoadSceneMode.Additive);
     }
+
+    public void OpenEntityMemory(Entity entity)
+    {
+
+    }
+
 }

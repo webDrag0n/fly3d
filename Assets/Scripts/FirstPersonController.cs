@@ -74,6 +74,8 @@ namespace StarterAssets
 
 		private const float _threshold = 0.01f;
 
+		private Transform grab_item;
+
 		private bool IsCurrentDeviceMouse
 		{
 			get
@@ -112,6 +114,8 @@ namespace StarterAssets
 
 		private void Update()
 		{
+			PickUpCheck();
+			InteractCheck();
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
@@ -122,7 +126,68 @@ namespace StarterAssets
 			CameraRotation();
 		}
 
-		private void GroundedCheck()
+		private void PickUpCheck()
+		{
+			if (_input.pickup)
+			{
+				Debug.Log(grab_item);
+                _input.pickup = false;
+                if (grab_item != null)
+				{
+					grab_item.GetComponent<Rigidbody>().isKinematic = false;
+                    grab_item.transform.parent = null;
+                    grab_item = null;
+                    return;
+				}
+				// Bit shift the index of the layer (10) to get a bit mask
+				// This would cast rays only against colliders in layer 10.
+				int layerMask = 1 << 10;
+
+                RaycastHit hit;
+                // Does the ray intersect any objects excluding the player layer
+                if (Physics.Raycast(_mainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector2(Screen.width / 2, Screen.height / 2)), out hit, 3f, layerMask))
+                {
+                    Debug.DrawRay(_mainCamera.transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+                    Debug.Log("Did Hit");
+                    if (grab_item == null)
+                    {
+                        grab_item = hit.transform;
+                        grab_item.GetComponent<Entity>().OnPickUp();
+                        grab_item.GetComponent<Rigidbody>().isKinematic = true;
+
+                        grab_item.transform.parent = _mainCamera.transform;
+                    }
+                }
+			}
+		}
+
+
+        private void InteractCheck()
+		{
+			if (_input.interact)
+			{
+                int layerMask = 1 << 10;
+
+                RaycastHit hit;
+                // Does the ray intersect any objects excluding the player layer
+                if (Physics.Raycast(_mainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector2(Screen.width / 2, Screen.height / 2)), out hit, 3f, layerMask))
+                {
+                    Debug.DrawRay(_mainCamera.transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+                    Debug.Log("Did Hit");
+                    if (grab_item == null)
+                    {
+
+                        // can only interact when hand empty
+                        Entity entity = hit.transform.gameObject.GetComponent<Entity>();
+						entity.OnInteract();
+                    }
+                }
+                _input.interact = false;
+            }
+		}
+
+
+        private void GroundedCheck()
 		{
 			// set sphere position, with offset
 			Vector3 spherePosition = new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z);
